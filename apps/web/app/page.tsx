@@ -1,16 +1,15 @@
-import { db } from "@repo/db"
-
-export const dynamic = "force-dynamic";
-
 const App = async () => {
-  const users = await db.user.findMany()
+  const res = await fetch("http://http-server:8080/users", {
+    cache: "no-store",
+  });
+
+  const users = await res.json();
+
   return (
-    <>
-      <div>
-        {JSON.stringify(users)}
-      </div>
-    </>
-  )
-}
+    <div>
+      {JSON.stringify(users)}
+    </div>
+  );
+};
 
 export default App
