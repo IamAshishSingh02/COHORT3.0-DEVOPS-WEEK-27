@@ -1,8 +1,11 @@
-const App = () => {
+import { db } from "@repo/db"
+
+const App = async () => {
+  const users = await db.user.findMany()
   return (
     <>
       <div>
-        Hi there,
+        {JSON.stringify(users)}
       </div>
     </>
   )
