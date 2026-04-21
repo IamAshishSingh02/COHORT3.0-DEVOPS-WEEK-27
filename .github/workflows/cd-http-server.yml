@@ -24,6 +24,29 @@ jobs:
           context: .
           file: ./docker/Dockerfile.http-server
           push: true
-          tags: ${{secrets.DOCKER_USERNAME}}/week-27-http-server:${{github.sha}}
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/week-27-http-server:latest
+            ${{secrets.DOCKER_USERNAME}}/week-27-http-server:${{github.sha}}
 
-  
+      - name: Run Prisma Migrations
+        run: pnpm --filter @repo/db exec prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_USERNAME }}/week-27-http-server:latest
+
+            docker stop http-server || true
+            docker rm http-server || true
+
+            docker run -d \
+              --name http-server \
+              -p 8080:8080 \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              ${{ secrets.DOCKER_USERNAME }}/week-27-http-server:latest
